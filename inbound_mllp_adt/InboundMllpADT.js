@@ -2,7 +2,7 @@ const hl7 = require('simple-hl7');
 const mongoose = require('mongoose');
 
 // Connect to MongoDB
-mongoose.connect('mongodb://mongodb:27017/local', {
+mongoose.connect('mongodb://mongodb:27017/meteor', {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
@@ -18,32 +18,17 @@ const hl7MessageSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now },
 });
 const HL7Message = mongoose.model('HL7Message', hl7MessageSchema);
-const schema = mongoose.Schema({
-    name: String,
-    age: Number
-  });
-
-  const Model = mongoose.model("model", schema, "myCollection");
 
 // Create HL7 server
 const app = hl7.tcp();
 
 app.use(async function (req, res, next) {
     
-      
-      
-
-      const doc1 = new Model({ name: "John", age: 21 });
-
-
     const hl7Message = new HL7Message({ message: req.msg.log() });
 
-    Model.createCollection().then(function (collection) {
-        console.log('Collection is created!');
-    });
 
     try {
-        await doc1.save();
+        await hl7Message.save();
         console.log('HL7 message saved to MongoDB');
       } catch (error) {
         console.error('Error saving HL7 message:', error);
