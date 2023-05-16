@@ -1,5 +1,6 @@
 const hl7 = require('simple-hl7');
 const mongoose = require('mongoose');
+const amqp = require('amqplib');
 
 // Connect to MongoDB
 mongoose.connect('mongodb://mongodb:27017/meteor', {
@@ -19,6 +20,13 @@ const hl7MessageSchema = new mongoose.Schema({
 });
 const HL7Message = mongoose.model('HL7Message', hl7MessageSchema);
 
+// RabbitMQ configuration
+const rabbitMQConfig = {
+    url: 'amqp://rabbitmq',
+    exchange: 'hl7_exchange',
+    queue: 'hl7_queue',
+};
+
 // Create HL7 server
 const app = hl7.tcp();
 
@@ -30,6 +38,7 @@ app.use(async function (req, res, next) {
     try {
         await hl7Message.save();
         console.log('HL7 message saved to MongoDB');
+        await publishMessageToRabbitMQ(hl7Message);
       } catch (error) {
         console.error('Error saving HL7 message:', error);
       }
@@ -56,6 +65,22 @@ app.use(function (err, req, res, next) {
 // Start the application if withListener is enabled
 app.start(parseInt(1234));
 
+
+// Publish HL7 message to RabbitMQ
+async function publishMessageToRabbitMQ(hl7Message) {
+    try {
+        const connection = await amqp.connect(rabbitMQConfig.url);
+        const channel = await connection.createChannel();
+        await channel.assertExchange(rabbitMQConfig.exchange, 'direct', { durable: true });
+        await channel.assertQueue(rabbitMQConfig.queue, { durable: true });
+        await channel.bindQueue(rabbitMQConfig.queue, rabbitMQConfig.exchange, '');
+        await channel.publish(rabbitMQConfig.exchange, '', Buffer.from(hl7Message.message));
+        await channel.close();
+        await connection.close();
+    } catch (error) {
+        console.error('Error publishing HL7 message to RabbitMQ:', error);
+    }
+}
 
 
 
