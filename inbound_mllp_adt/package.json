@@ -1,0 +1,17 @@
+{
+  "name": "inbound_mllp_adt",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node InboundMllpADT.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "mongoose": "^7.1.1",
+    "simple-hl7": "^3.2.4"
+  },
+  "author": "",
+  "license": "ISC"
+}

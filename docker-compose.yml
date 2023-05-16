@@ -1,58 +1,20 @@
 version: '3'
 services:
-  configsvr1:
-    image: mongo:latest
-    command: mongod --configsvr --replSet configReplSet --port 27019
-    volumes:
-      - mongodata:/data/db
-    ports:
-      - 27019:27019
-    networks:
-      - mongo-net
-  
-  configsvr2:
-    image: mongo:latest
-    command: mongod --configsvr --replSet configReplSet --port 27019
-    volumes:
-      - mongodata:/data/db
-    networks:
-      - mongo-net
-
-  configsvr3:
-    image: mongo:latest
-    command: mongod --configsvr --replSet configReplSet --port 27019
-    volumes:
-      - mongodata:/data/db
-    networks:
-      - mongo-net
-
-  shard1:
-    image: mongo:latest
-    command: mongod --shardsvr --replSet shardReplSet1 --port 27018
-    volumes:
-      - mongodata:/data/db
-    networks:
-      - mongo-net
-
-  shard2:
-    image: mongo:latest
-    command: mongod --shardsvr --replSet shardReplSet2 --port 27018
-    volumes:
-      - mongodata:/data/db
-    networks:
-      - mongo-net
-
-  mongos:
-    image: mongo:latest
-    command: mongos --configdb configReplSet/configsvr1:27019,configsvr2:27019,configsvr3:27019 --port 27017
-    ports:
-      - 27017:27017
-    networks:
-      - mongo-net
-
-networks:
-  mongo-net:
-
-volumes:
-  mongodata:
-  
+    mongodb:
+      image: mongo:latest
+      container_name: mongodb
+      ports:
+        - 27017:27017
+    mongoclient:
+      image: mongoclient/mongoclient:latest
+      container_name: mongoclient
+      depends_on:
+        - mongodb
+      ports:
+        - 3300:3000
+    hl7adtinbound:
+      build:
+        context: ./inbound_mllp_adt
+        dockerfile: Dockerfile
+      ports:
+        - 1234:1234
